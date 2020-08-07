@@ -50,7 +50,7 @@ public class Methods : MonoBehaviour
 
     public void Power_1(ref int hp, int power, int turn, int id)
     {
-        Attack(ref hp, power*2, turn, id);
+        Attack(ref hp, power + 150, turn, id);
     }
 
     public void Magic_0(ref int hp, int magic, int turn, int id)
