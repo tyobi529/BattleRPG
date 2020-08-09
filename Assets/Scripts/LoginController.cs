@@ -25,12 +25,14 @@ public class LoginController : MonoBehaviourPunCallbacks
         //MasterClientにGameControllerの生成
         if (PhotonNetwork.LocalPlayer.ActorNumber == 1)
         {
-            PhotonNetwork.Instantiate("Player1", new Vector3(0, 0, 0), Quaternion.identity);
+            //PhotonNetwork.Instantiate("Player1", new Vector3(0, 0, 0), Quaternion.identity);
+            PhotonNetwork.Instantiate("GameController", new Vector3(0, 0, 0), Quaternion.identity);
+
         }
 
         else if (PhotonNetwork.LocalPlayer.ActorNumber == 2)
         {
-            StartCoroutine(GameControllerGenerate());
+            //StartCoroutine(GameControllerGenerate());
 
         }
 
