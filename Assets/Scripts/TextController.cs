@@ -22,13 +22,7 @@ public class TextController : MonoBehaviour
 
     public void TextUpdate(int myhp, int myat, int mymg, int enemyhp, int enemyat, int enemymg)
     {
-        MyhpText.text = "HP: " + myhp;
-        MyatText.text = "PW: " + myat;
-        MymgText.text = "MG: " + mymg;
 
-        EnemyhpText.text = "HP: " + enemyhp;
-        EnemyatText.text = "PW: " + enemyat;
-        EnemymgText.text = "MG: " + enemymg;
 
     }
 

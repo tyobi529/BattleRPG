@@ -10,8 +10,8 @@ public class GameController : MonoBehaviourPunCallbacks
     GameObject Player2;
 
     //画面サイズ
-    float width = 18f;
-    float height = 10f;
+    float width = 5.5f;
+    float height = 9.5f;
 
     //private Vector3 screenPoint;
     //private Vector3 offset;
@@ -32,7 +32,7 @@ public class GameController : MonoBehaviourPunCallbacks
     GameObject DecisionButton;
 
 
-
+   
 
     Text AttackButtonText;
     Text DispatchButtonText;
@@ -52,6 +52,7 @@ public class GameController : MonoBehaviourPunCallbacks
     //int select_2 = 0;
 
     //攻撃か防御で選択する門
+    //初期値1
     int monselect_1 = 0;
     int monselect_2 = 0;
 
@@ -101,6 +102,11 @@ public class GameController : MonoBehaviourPunCallbacks
     //Text specialCount
 
     public int turn = 1;
+
+    //選択が終わるとtrue
+    bool turnend_1 = false;
+    bool turnend_2 = false;
+
 
     public GameObject NekoPrefab;
 
@@ -154,6 +160,8 @@ public class GameController : MonoBehaviourPunCallbacks
 
 
         Yajirushi = GameObject.Find("Yajirushi");
+        Yajirushi.transform.position = new Vector3(-width / 3f, Yajirushi.transform.position.y, 0f);
+
         Yajirushi.SetActive(false);
 
 
@@ -188,17 +196,53 @@ public class GameController : MonoBehaviourPunCallbacks
     private void Update()
     {
 
-        if (playerId == turn)
+        //お互い選択終了
+        //プレイヤー１のみでRPCで実行
+        if (playerId == 1)
         {
-            if (nekocount == 3)
+            if (turnend_1 && turnend_2)
             {
-                DecisionButton.SetActive(true);
-            }
-            else
-            {
-                DecisionButton.SetActive(false);
+                photonView.RPC(nameof(StartAction), RpcTarget.All);
+
             }
         }
+
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            Debug.Log("monselect1:" + monselect_1);
+            Debug.Log("monselect2:" + monselect_2);
+
+            for (int i = 0; i < 3; i++)
+            {
+                Debug.Log("mon1" + mon1[i]);
+            }
+
+            //Debug.Log(mon1);
+            //Debug.Log(mon2);
+
+            Debug.Log("turn" + turn);
+
+
+        }
+
+        //派遣
+        
+        if (select == 1)
+        {
+            if (playerId == turn)
+            {
+                if (nekocount == 3)
+                {
+                    DecisionButton.SetActive(true);
+                }
+                else
+                {
+                    DecisionButton.SetActive(false);
+                }
+            }
+        }
+
 
         if (select == 2)
         {
@@ -207,50 +251,55 @@ public class GameController : MonoBehaviourPunCallbacks
                 Vector3 mousePos = Input.mousePosition;
                 Vector3 worldPos = Camera.main.ScreenToWorldPoint(mousePos);
 
-                if (height / 6f < worldPos.y)
+                if (-height / 4f - 0.5f < worldPos.y && worldPos.y < 0)
                 {
-                    Yajirushi.transform.position = new Vector3(Yajirushi.transform.position.x, height / 3f, 0f);
-
-                    if (playerId == 1)
+                    if (worldPos.x < -width / 6f)
                     {
-                        monselect_1 = 1;
+                        Yajirushi.transform.position = new Vector3(-width / 3f, Yajirushi.transform.position.y, 0f);
+
+                        if (playerId == 1)
+                        {
+                            monselect_1 = 1;
+                        }
+                        else if (playerId == 2)
+                        {
+                            monselect_2 = 1;
+                        }
+
+
                     }
-                    else if (playerId == 2)
+                    else if (-width / 6f <= worldPos.x && worldPos.x <= width / 6f)
                     {
-                        monselect_2 = 1;
+                        Yajirushi.transform.position = new Vector3(0f, Yajirushi.transform.position.y, 0f);
+
+                        if (playerId == 1)
+                        {
+                            monselect_1 = 2;
+                        }
+                        else if (playerId == 2)
+                        {
+                            monselect_2 = 2;
+                        }
+                    }
+                    else if (width / 6f < worldPos.x)
+                    {
+                        Yajirushi.transform.position = new Vector3(width / 3f, Yajirushi.transform.position.y, 0f);
+
+                        if (playerId == 1)
+                        {
+                            monselect_1 = 3;
+                        }
+                        else if (playerId == 2)
+                        {
+                            monselect_2 = 3;
+                        }
                     }
 
-
+                    //Debug.Log(monselect_1);
                 }
-                else if (-height / 6f <= worldPos.y && worldPos.y <= height / 6f)
-                {
-                    Yajirushi.transform.position = new Vector3(Yajirushi.transform.position.x, 0f, 0f);
-
-                    if (playerId == 1)
-                    {
-                        monselect_1 = 2;
-                    }
-                    else if (playerId == 2)
-                    {
-                        monselect_2 = 2;
-                    }
-                }
-                else if (worldPos.y < -height / 6f)
-                {
-                    Yajirushi.transform.position = new Vector3(Yajirushi.transform.position.x, -height / 3f, 0f);
-
-                    if (playerId == 1)
-                    {
-                        monselect_1 = 3;
-                    }
-                    else if (playerId == 2)
-                    {
-                        monselect_2 = 3;
-                    }
-                }
-
-                Debug.Log(monselect_1);
             }
+
+                   
 
 
         }
@@ -336,7 +385,7 @@ public class GameController : MonoBehaviourPunCallbacks
             for (int i = 0; i < 3; i++)
             {
                 GameObject neko = Instantiate(NekoPrefab) as GameObject;
-                neko.transform.position = new Vector3(-7.0f, 3.0f - 3.0f * i, 0f);
+                neko.transform.position = new Vector3(-1.82f + 1.82f*i, -4f, 0f);
             }
 
             AttackButton.SetActive(false);
@@ -347,27 +396,333 @@ public class GameController : MonoBehaviourPunCallbacks
         //防御ターンなら
         else
         {
+            selectPos.SetActive(false);
+            Yajirushi.SetActive(false);
+            photonView.RPC(nameof(TurnEnd), RpcTarget.All, playerId);
 
         }
 
     }
 
-    //攻撃を選択
+    //攻撃or防御を選択
     public void OnAttackButton()
     {
         select = 2;
 
+        AttackButton.SetActive(false);
+        DispatchButton.SetActive(false);
         selectPos.SetActive(true);
         Yajirushi.SetActive(true);
 
+        DecisionButton.SetActive(true);
 
+
+        //初期値入力
+        if (playerId == 1)
+        {
+            monselect_1 = 1;
+        }
+        else if (playerId == 2)
+        {
+            monselect_2 = 1;
+        }
+       
     }
 
     //決定ボタン
     public void OnDecisionButton()
     {
+        //派遣
+        if (select == 1)
+        {
+            if (playerId == 1)
+            {
+                photonView.RPC(nameof(Dispatch), RpcTarget.All, mon1);
+                //Debug.Log("aaa");
+            }
+            else if (playerId == 2)
+            {
+                photonView.RPC(nameof(Dispatch), RpcTarget.All, mon2);
+            }
+
+            nekocount = 0;
+
+        }
+
+        //攻撃or防御
+        if (select == 2)
+        {
+            if (playerId == 1)
+            {
+                photonView.RPC(nameof(MonSelect), RpcTarget.All, playerId, monselect_1);
+            }
+            else if (playerId == 2)
+            {
+                photonView.RPC(nameof(MonSelect), RpcTarget.All, playerId, monselect_2);
+            }
+        }
+
+        selectPos.SetActive(false);
+        Yajirushi.SetActive(false);
+        DecisionButton.SetActive(false);
+
+        photonView.RPC(nameof(TurnEnd), RpcTarget.All, playerId);
+
+
 
     }
+
+
+    //派遣人数共有
+    [PunRPC]
+    public void Dispatch(int[] mon)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (turn == 1)
+            {
+                mon1[i] = mon[i];
+            }
+            else if (turn == 2)
+            {
+                mon2[i] = mon[i];
+            }
+        }
+
+
+    }
+
+
+    //攻撃or防御
+    //選択共有
+    [PunRPC]
+    public void MonSelect(int id, int mon)
+    {
+        if (id == 1)
+        {
+            monselect_1 = mon;
+        }
+        else if (id == 2)
+        {
+            monselect_2 = mon;
+        }
+    }
+
+    //turnendを送る
+    [PunRPC]
+    private void TurnEnd(int id)
+    {
+        if (id == 1)
+        {
+            turnend_1 = true;
+        }
+        else if (id == 2)
+        {
+            turnend_2 = true;
+        }
+    }
+
+    //次のturnへ
+    private void TurnChange()
+    {
+        if (turn == 1)
+        {
+            turn = 2;
+            //Debug.Log("turn" + turn);
+
+        }
+        else if (turn == 2)
+        {
+            turn = 1;
+        }
+
+
+
+
+    }
+
+    //ボタンを表示
+    [PunRPC]
+    private void ShowButton()
+    {
+        DispatchButton.SetActive(true);
+        AttackButton.SetActive(true);
+    }
+
+
+    //ボタンテキストの変更
+    [PunRPC]
+    private void ButtonTextChange()
+    {
+        if (turn == playerId)
+        {
+            AttackButtonText.text = "こうげきする";
+            DispatchButtonText.text = "派遣する";
+        }
+        else
+        {
+            AttackButtonText.text = "ぼうぎょする";
+            DispatchButtonText.text = "待機する";
+        }
+    }
+
+
+
+
+    [PunRPC]
+    private void StartAction()
+    {
+        //攻撃側の時
+        if (turn == playerId)
+        {
+            //プレイヤー１
+            //相手が待機を選択
+            if (playerId == 1 && monselect_2 == 0)
+            {
+                Debug.Log("相手は様子を見ている");
+            }
+            //相手が防御を選択
+            else if (playerId == 1 && monselect_2 != 0)
+            {
+                Debug.Log("相手は" + monselect_2 + "の門を閉めた");
+            }
+
+            //プレイヤー２
+            //相手が待機を選択
+            if (playerId == 2 && monselect_1 == 0)
+            {
+                Debug.Log("相手は様子を見ている");
+            }
+            //相手が防御を選択
+            else if (playerId == 2 && monselect_1 != 0)
+            {
+                Debug.Log("相手は" + monselect_1 + "の門を閉めた");
+            }
+
+            //兵を派遣した場合
+            if (select == 1)
+            {
+                Debug.Log("兵を派遣した");
+
+            }
+
+            //攻撃した場合
+            if (select == 2)
+            {
+                //プレイヤー１
+                if (playerId == 1 && monselect_1 == monselect_2)
+                {
+                    Debug.Log("攻撃が防がれてしまった！");
+                }
+                else if (playerId == 1 && monselect_1 != monselect_2)
+                {
+                    Debug.Log("相手に" + mon1[monselect_1 - 1] + "のダメージを与えた！");
+                }
+
+                //攻撃した場合
+                //プレイヤー２
+                if (playerId == 2 && monselect_1 == monselect_2)
+                {
+                    Debug.Log("攻撃が防がれてしまった！");
+                }
+                else if (playerId == 2 && monselect_1 != monselect_2)
+                {
+                    Debug.Log("相手に" + mon2[monselect_2 - 1] + "のダメージを与えた！");
+                }
+            }
+
+
+
+
+        }
+
+        //防御側の時
+        else
+        {
+            //プレイヤー１
+            //待機を選択
+            if (playerId == 1 && monselect_1 == 0)
+            {
+                Debug.Log("様子を見ることにした。");
+            }
+            //防御を選択
+            else if (playerId == 1 && monselect_1 != 0)
+            {
+                Debug.Log(monselect_1 + "の門を閉めた");
+            }
+
+            //プレイヤー2
+            //待機を選択
+            if (playerId == 2 && monselect_2 == 0)
+            {
+                Debug.Log("様子を見ることにした。");
+            }
+            //防御を選択
+            else if (playerId == 2 && monselect_2 != 0)
+            {
+                Debug.Log(monselect_2 + "の門を閉めた");
+            }
+
+
+            //相手が兵を派遣した場合
+            //プレイヤー１
+            if (playerId == 1 && monselect_2 == 0)
+            {
+                Debug.Log("相手は兵を派遣した");
+            }
+            else if (playerId == 2 && monselect_1 == 0)
+            {
+                Debug.Log("相手は兵を派遣した");
+            }
+
+            //相手が攻撃してきた場合
+
+            //プレイヤー１
+            if (playerId == 1 && monselect_2 != 0)
+            {
+                if (monselect_1 == monselect_2)
+                {
+                    Debug.Log("攻撃を防いだ！");
+                }
+                else
+                {
+                    Debug.Log(mon2[monselect_2 - 1] + "のダメージを受けた！");
+                }
+            }
+
+            //プレイヤー２
+            if (playerId == 2 && monselect_1 != 0)
+            {
+                if (monselect_1 == monselect_2)
+                {
+                    Debug.Log("攻撃を防いだ！");
+                }
+                else
+                {
+                    Debug.Log(mon1[monselect_1 - 1] + "のダメージを受けた！");
+                }
+            }
+
+        }
+
+        //初期化
+        monselect_1 = 0;
+        monselect_2 = 0;
+        select = 0;
+        turnend_1 = false;
+        turnend_2 = false;
+
+
+
+        TurnChange();
+
+        photonView.RPC(nameof(ShowButton), RpcTarget.All);
+
+        photonView.RPC(nameof(ButtonTextChange), RpcTarget.All);
+
+    }
+
+
 
 
 
@@ -673,19 +1028,7 @@ public class GameController : MonoBehaviourPunCallbacks
     //}
 
 
-    ////turnを送る
-    //[PunRPC]
-    //private void TurnChange()
-    //{
-    //    if (turn == 1)
-    //    {
-    //        turn = 2;
-    //    }
-    //    else if (turn == 2)
-    //    {
-    //        turn = 1;
-    //    }
-    //}
+
 
 
 

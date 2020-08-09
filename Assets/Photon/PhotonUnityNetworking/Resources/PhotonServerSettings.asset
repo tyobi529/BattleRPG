@@ -54,6 +54,14 @@ MonoBehaviour:
   - Domethod_2
   - Expectation
   - SpecialCountDown
+  - Dispatch
+  - MonSelect_1
+  - MonSelect_2
+  - MonSelect
+  - StartAction
+  - TurnEnd
+  - ShowButton
+  - ButtonTextChange
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0
