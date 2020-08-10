@@ -33,6 +33,9 @@ public class LoginController : MonoBehaviourPunCallbacks
         else if (PhotonNetwork.LocalPlayer.ActorNumber == 2)
         {
             //StartCoroutine(GameControllerGenerate());
+            //PhotonNetwork.Instantiate("test", new Vector3(0, 0, 0), Quaternion.identity);
+
+
 
         }
 

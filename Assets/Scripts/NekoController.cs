@@ -1,8 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
-public class NekoController : MonoBehaviour
+
+public class NekoController : MonoBehaviourPunCallbacks
 {
     Vector3 thisPos;
 
@@ -10,6 +12,8 @@ public class NekoController : MonoBehaviour
     //画面サイズ
     float width = 5.5f;
     float height = 9.5f;
+
+    //bool isset = false;
 
 
     GameController gameController;
@@ -24,26 +28,89 @@ public class NekoController : MonoBehaviour
     {
         gameController = GameObject.Find("GameController(Clone)").GetComponent<GameController>();
 
+        if (gameController.playerId == 2)
+        {
+            this.transform.rotation = new Quaternion(0f, 0f, 180f, 0f);
+        }
+
         firstPos = this.gameObject.transform.position;
+
+        if (!photonView.IsMine)
+        {
+            this.GetComponent<SpriteRenderer>().enabled = false;
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        thisPos = this.transform.position;
-
-        //範囲外
-        if (thisPos.x < -width/2f || thisPos.x > width/2f || thisPos.y > -0.5f || this.thisPos.y < -height/2f)
+ 
+        //移動終了
+        if (gameController.viewNeko > 0)
         {
-            this.transform.position = firstPos;
+            //Vector3 Pos = this.GetComponent<PhotonTransformView>().transform.position;
+            Vector3 Pos = this.transform.position;
+            //Debug.Log(Pos.x);
+            //Debug.Log(Pos.y);
+            //Debug.Log(Pos.z);
+
+            //this.transform.position = gameController.nekoPrefab[gameController.viewNeko - 1].transform.position;
+
+            //Debug.Log(gameController.viewNeko);
+
+            //GetComponent<PhotonTransformView>().enabled = false;
+
+            //gameController.viewNeko--;
+
+
+
+            if (!photonView.IsMine)
+            {
+                gameController.viewNeko--;
+
+                //Debug.Log("aaa");
+                this.GetComponent<SpriteRenderer>().enabled = true;
+                //this.transform.position = new Vector3(Pos.x, -Pos.y, Pos.z);
+                this.transform.position = Pos;
+
+
+                //this.transform.position = new Vector3(this.transform.position.x, )
+            }
+
+            GetComponent<BoxCollider2D>().enabled = false;
+            GetComponent<Mouse>().enabled = false;
+            GetComponent<NekoController>().enabled = false;
         }
 
-        if (-height/4f < thisPos.y && thisPos.y < 0)
+
+        thisPos = this.transform.position;
+
+        if (gameController.playerId == 1)
         {
-            if (gameController.playerId == 1)
+            //範囲外
+            if (thisPos.x < -width / 2f || thisPos.x > width / 2f || thisPos.y > -0.5f || this.thisPos.y < -height / 2f)
             {
-                //赤
-                if (thisPos.x < -width / 6f)
+                this.transform.position = firstPos;
+            }
+        }
+        else if (gameController.playerId == 2)
+        {
+            //範囲外
+            if (thisPos.x < -width / 2f || thisPos.x > width / 2f || thisPos.y < 0.5f || this.thisPos.y > height / 2f)
+            {
+                this.transform.position = firstPos;
+            }
+        }
+
+
+        if (gameController.playerId == 1)
+        {
+            //if (-height / 4f < thisPos.y)
+                if (-height / 4f < thisPos.y && thisPos.y < 0)
+
+                {
+                    //赤
+                    if (thisPos.x < -width / 6f)
                 {
                     this.GetComponent<SpriteRenderer>().color = new Color(243f / 255f, 201f / 255f, 201f / 255f);
 
@@ -69,6 +136,8 @@ public class NekoController : MonoBehaviour
                         }
 
                     }
+
+                    this.tag = "mon1";
 
                 }
                 //青
@@ -98,6 +167,9 @@ public class NekoController : MonoBehaviour
                         }
 
                     }
+
+                    this.tag = "mon2";
+
                 }
                 //黄色
                 else if (width / 6f < thisPos.x)
@@ -126,13 +198,21 @@ public class NekoController : MonoBehaviour
                         }
 
                     }
+
+                    this.tag = "mon3";
+
                 }
 
             }
+        }
 
 
-            //プレイヤー２
-            else if (gameController.playerId == 2)
+        //プレイヤー２
+        else if (gameController.playerId == 2)
+        {
+            if (height / 4f > thisPos.y && thisPos.y > 0)
+
+                //if (height / 4f > thisPos.y)
             {
                 //赤
                 if (thisPos.x < -width / 6f)
@@ -162,6 +242,9 @@ public class NekoController : MonoBehaviour
 
                     }
 
+                    this.tag = "mon1";
+
+
                 }
                 //青
                 else if (-width / 6f <= thisPos.x && thisPos.x <= width / 6f)
@@ -190,6 +273,9 @@ public class NekoController : MonoBehaviour
                         }
 
                     }
+
+                    this.tag = "mon2";
+
                 }
                 //黄色
                 else if (width / 6f < thisPos.x)
@@ -218,13 +304,15 @@ public class NekoController : MonoBehaviour
                         }
 
                     }
+
+                    this.tag = "mon3";
+
                 }
             }
 
 
-
-
         }
+
         else
         {
             this.GetComponent<SpriteRenderer>().color = Color.white;

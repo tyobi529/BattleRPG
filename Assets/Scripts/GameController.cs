@@ -5,9 +5,12 @@ using UnityEngine.UI;
 
 public class GameController : MonoBehaviourPunCallbacks
 {
+    GameObject MainCamera;
 
     GameObject Player1;
     GameObject Player2;
+
+    GameObject SelectPos;
 
     //画面サイズ
     float width = 5.5f;
@@ -17,12 +20,12 @@ public class GameController : MonoBehaviourPunCallbacks
     //private Vector3 offset;
 
 
-    int hp_1 = 500;
+    public int hp_1 = 100;
     public int[] mon1 = new int[3] { 0, 0, 0 };
     //int power_1 = 100;
     //int magic_1 = 50;
 
-    int hp_2 = 500;
+    public int hp_2 = 100;
     public int[] mon2 = new int[3] { 0, 0, 0 };
 
     public int nekocount = 0;
@@ -90,6 +93,11 @@ public class GameController : MonoBehaviourPunCallbacks
     private GameObject[] SupportAction = new GameObject[3];
 
 
+    public GameObject[] nekoPrefab = new GameObject[3];
+    //相手にも見えるようにするため
+    public int viewNeko = 0;
+
+
     //特技
     //１行目は物理
     //２行目は魔法
@@ -102,6 +110,8 @@ public class GameController : MonoBehaviourPunCallbacks
     //Text specialCount
 
     public int turn = 1;
+
+    int turncount = 1;
 
     //選択が終わるとtrue
     bool turnend_1 = false;
@@ -122,8 +132,26 @@ public class GameController : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+
+
+
+
         //プレイヤーのid入力
         playerId = PhotonNetwork.LocalPlayer.ActorNumber;
+
+        //プレイヤー２よう
+        if (playerId == 2)
+        {
+            //カメラ回転
+            MainCamera = GameObject.Find("Main Camera");
+            MainCamera.transform.rotation = new Quaternion(0f, 0f, 180f, 0f);
+
+            //SelectPos = GameObject.Find("selectPos");
+
+            //Vector3 Pos =
+            //SelectPos..position = new Vector3(SelectPos.transform.position.x, 202.9f, SelectPos.transform.position.z);
+            //GameObject.ge
+        }
 
         //テキスト表示オブジェクト
         TextController = GameObject.Find("TextController");
@@ -155,16 +183,49 @@ public class GameController : MonoBehaviourPunCallbacks
             DispatchButtonText.text = "待機する";
         }
 
+        //if (playerId == 1)
+        //{
         selectPos = GameObject.Find("selectPos");
         selectPos.SetActive(false);
 
+        if (playerId == 2)
+        {
+            selectPos.transform.rotation = new Quaternion(0f, 180f, 0f, 0f);
+        }
+
+
+            //GameObject.Find("selectPos(2)").SetActive(false);
+        //}
+        //else if (playerId == 2)
+        //{
+        //    selectPos = GameObject.Find("selectPos(2)");
+        //    selectPos.SetActive(false);
+
+        //    GameObject.Find("selectPos").SetActive(false);
+
+        //}
+
+
 
         Yajirushi = GameObject.Find("Yajirushi");
-        Yajirushi.transform.position = new Vector3(-width / 3f, Yajirushi.transform.position.y, 0f);
+        //Yajirushi.transform.position = new Vector3(-width / 3f, Yajirushi.transform.position.y, 0f);
 
         Yajirushi.SetActive(false);
 
 
+        viewNeko = 0;
+
+
+        if (playerId == 1)
+        {
+            TextController.GetComponent<TextController>().TextUpdate(hp_1, hp_2);
+        }
+
+        else if (playerId == 2)
+        {
+            TextController.GetComponent<TextController>().TextUpdate(hp_2, hp_1);
+
+        }
         //Debug.Log(nekocount[0]);
         //Debug.Log(mon1[0]);
 
@@ -189,12 +250,19 @@ public class GameController : MonoBehaviourPunCallbacks
         //攻守を表示
         //TextController.GetComponent<TextController>().ShowTurn(playerId, turn);
 
-
+        Debug.Log("ターン：　" + turncount);
     }
 
 
     private void Update()
     {
+
+        //決定ボタン
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            OnDecisionButton();
+        }
+        
 
         //お互い選択終了
         //プレイヤー１のみでRPCで実行
@@ -208,23 +276,23 @@ public class GameController : MonoBehaviourPunCallbacks
         }
 
 
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Debug.Log("monselect1:" + monselect_1);
-            Debug.Log("monselect2:" + monselect_2);
+        //if (Input.GetKeyDown(KeyCode.Space))
+        //{
+        //    Debug.Log("monselect1:" + monselect_1);
+        //    Debug.Log("monselect2:" + monselect_2);
 
-            for (int i = 0; i < 3; i++)
-            {
-                Debug.Log("mon1" + mon1[i]);
-            }
+        //    for (int i = 0; i < 3; i++)
+        //    {
+        //        Debug.Log("mon1" + mon1[i]);
+        //    }
 
-            //Debug.Log(mon1);
-            //Debug.Log(mon2);
+        //    //Debug.Log(mon1);
+        //    //Debug.Log(mon2);
 
-            Debug.Log("turn" + turn);
+        //    Debug.Log("turn" + turn);
 
 
-        }
+        //}
 
         //派遣
         
@@ -251,52 +319,99 @@ public class GameController : MonoBehaviourPunCallbacks
                 Vector3 mousePos = Input.mousePosition;
                 Vector3 worldPos = Camera.main.ScreenToWorldPoint(mousePos);
 
-                if (-height / 4f - 0.5f < worldPos.y && worldPos.y < 0)
+                //if (-height / 4f - 0.5f < worldPos.y && worldPos.y < 0)
+                //{
+                if (worldPos.x < -width / 6f)
                 {
-                    if (worldPos.x < -width / 6f)
+                    //Yajirushi.transform.position = new Vector3(-width / 3f, Yajirushi.transform.position.y, 0f);
+
+                    //Yajirushi.transform.position = new Vector3(-250f, 180f, 0f);
+
+                    //Debug.Log("aa");
+
+
+                    if (playerId == 1)
                     {
-                        Yajirushi.transform.position = new Vector3(-width / 3f, Yajirushi.transform.position.y, 0f);
-
-                        if (playerId == 1)
-                        {
-                            monselect_1 = 1;
-                        }
-                        else if (playerId == 2)
-                        {
-                            monselect_2 = 1;
-                        }
-
+                        Yajirushi.transform.position = new Vector3(Screen.width / 6f, 180f, 0f);
 
                     }
-                    else if (-width / 6f <= worldPos.x && worldPos.x <= width / 6f)
-                    {
-                        Yajirushi.transform.position = new Vector3(0f, Yajirushi.transform.position.y, 0f);
 
-                        if (playerId == 1)
-                        {
-                            monselect_1 = 2;
-                        }
-                        else if (playerId == 2)
-                        {
-                            monselect_2 = 2;
-                        }
-                    }
-                    else if (width / 6f < worldPos.x)
+                    else if (playerId == 2)
                     {
-                        Yajirushi.transform.position = new Vector3(width / 3f, Yajirushi.transform.position.y, 0f);
+                        Yajirushi.transform.position = new Vector3(Screen.width * 5f / 6f, 180f, 0f);
 
-                        if (playerId == 1)
-                        {
-                            monselect_1 = 3;
-                        }
-                        else if (playerId == 2)
-                        {
-                            monselect_2 = 3;
-                        }
                     }
 
-                    //Debug.Log(monselect_1);
+
+
+
+
+                    //Yajirushi.GetComponent<RectTransform>().position = new Vector3(-250f, 180f, 0f);
+
+
+                    if (playerId == 1)
+                    {
+                        monselect_1 = 1;
+                    }
+                    else if (playerId == 2)
+                    {
+                        monselect_2 = 1;
+                    }
+
+
                 }
+                else if (-width / 6f <= worldPos.x && worldPos.x <= width / 6f)
+                {
+                    //Yajirushi.transform.position = new Vector3(0f, Yajirushi.transform.position.y, 0f);
+                    Yajirushi.transform.position = new Vector3(Screen.width / 2f, 180f, 0f);
+
+
+                    if (playerId == 1)
+                    {
+                        monselect_1 = 2;
+                    }
+                    else if (playerId == 2)
+                    {
+                        monselect_2 = 2;
+                    }
+                }
+                else if (width / 6f < worldPos.x)
+                {
+                    //Yajirushi.transform.position = new Vector3(width / 3f, Yajirushi.transform.position.y, 0f);
+
+                    if (playerId == 1)
+                    {
+                        Yajirushi.transform.position = new Vector3(Screen.width * 5f / 6f, 180f, 0f);
+
+                    }
+
+                    else if (playerId == 2)
+                    {
+                        Yajirushi.transform.position = new Vector3(Screen.width / 6f, 180f, 0f);
+
+                    }
+
+
+                    if (playerId == 1)
+                    {
+                        monselect_1 = 3;
+                    }
+                    else if (playerId == 2)
+                    {
+                        monselect_2 = 3;
+                    }
+                }
+
+                //Debug.Log(monselect_1);
+                //}
+
+                //if (playerId == 2)
+                //{
+                //    Vector3 Pos = Yajirushi.transform.position;
+                //    Yajirushi.transform.position = new Vector3(-Pos.x, Pos.y, Pos.z);
+
+                //}
+
             }
 
                    
@@ -384,8 +499,21 @@ public class GameController : MonoBehaviourPunCallbacks
         {
             for (int i = 0; i < 3; i++)
             {
-                GameObject neko = Instantiate(NekoPrefab) as GameObject;
-                neko.transform.position = new Vector3(-1.82f + 1.82f*i, -4f, 0f);
+                //GameObject neko = Instantiate(NekoPrefab) as GameObject;
+                //neko.transform.position = new Vector3(-1.82f + 1.82f * i, -4f, 0f);
+
+                //nekoPrefab[i] = PhotonNetwork.Instantiate("neko", new Vector3(-1.82f + 1.82f * i, -4f, 0f), Quaternion.identity);
+                if (playerId == 1)
+                {
+                    PhotonNetwork.Instantiate("neko", new Vector3(-1.82f + 1.82f * i, -4f, 0f), Quaternion.identity);
+                }
+                else if (playerId == 2)
+                {
+                    PhotonNetwork.Instantiate("neko", new Vector3(-1.82f + 1.82f * i, 4f, 0f), Quaternion.identity);
+                }
+
+
+
             }
 
             AttackButton.SetActive(false);
@@ -498,6 +626,7 @@ public class GameController : MonoBehaviourPunCallbacks
     [PunRPC]
     public void MonSelect(int id, int mon)
     {
+
         if (id == 1)
         {
             monselect_1 = mon;
@@ -506,6 +635,10 @@ public class GameController : MonoBehaviourPunCallbacks
         {
             monselect_2 = mon;
         }
+        
+
+
+
     }
 
     //turnendを送る
@@ -567,6 +700,12 @@ public class GameController : MonoBehaviourPunCallbacks
     }
 
 
+    //ダメージ関数
+    private void Damage(ref int hp, int mon)
+    {
+        hp -= mon*10;
+    }
+
 
 
     [PunRPC]
@@ -585,6 +724,9 @@ public class GameController : MonoBehaviourPunCallbacks
             else if (playerId == 1 && monselect_2 != 0)
             {
                 Debug.Log("相手は" + monselect_2 + "の門を閉めた");
+
+                //猫を減らす
+                mon2[monselect_2 - 1]--;
             }
 
             //プレイヤー２
@@ -597,12 +739,17 @@ public class GameController : MonoBehaviourPunCallbacks
             else if (playerId == 2 && monselect_1 != 0)
             {
                 Debug.Log("相手は" + monselect_1 + "の門を閉めた");
+
+                //猫を減らす
+                mon1[monselect_1 - 1]--;
             }
 
             //兵を派遣した場合
             if (select == 1)
             {
                 Debug.Log("兵を派遣した");
+
+
 
             }
 
@@ -616,7 +763,11 @@ public class GameController : MonoBehaviourPunCallbacks
                 }
                 else if (playerId == 1 && monselect_1 != monselect_2)
                 {
-                    Debug.Log("相手に" + mon1[monselect_1 - 1] + "のダメージを与えた！");
+                    Debug.Log("相手に" + mon1[monselect_1 - 1]*10 + "のダメージを与えた！");
+
+                    Damage(ref hp_2, mon1[monselect_1 - 1]);
+
+
                 }
 
                 //攻撃した場合
@@ -627,7 +778,9 @@ public class GameController : MonoBehaviourPunCallbacks
                 }
                 else if (playerId == 2 && monselect_1 != monselect_2)
                 {
-                    Debug.Log("相手に" + mon2[monselect_2 - 1] + "のダメージを与えた！");
+                    Debug.Log("相手に" + mon2[monselect_2 - 1]*10 + "のダメージを与えた！");
+
+                    Damage(ref hp_1, mon2[monselect_2 - 1]);
                 }
             }
 
@@ -649,6 +802,13 @@ public class GameController : MonoBehaviourPunCallbacks
             else if (playerId == 1 && monselect_1 != 0)
             {
                 Debug.Log(monselect_1 + "の門を閉めた");
+
+                //猫を減らす
+                mon1[monselect_1 - 1]--;
+
+                GameObject neko = GameObject.FindGameObjectWithTag("mon" + monselect_1.ToString());
+                PhotonNetwork.Destroy(neko);
+
             }
 
             //プレイヤー2
@@ -661,6 +821,12 @@ public class GameController : MonoBehaviourPunCallbacks
             else if (playerId == 2 && monselect_2 != 0)
             {
                 Debug.Log(monselect_2 + "の門を閉めた");
+
+                //猫を減らす
+                mon2[monselect_2 - 1]--;
+
+                GameObject neko = GameObject.FindGameObjectWithTag("mon" + monselect_2.ToString());
+                PhotonNetwork.Destroy(neko);
             }
 
 
@@ -668,11 +834,27 @@ public class GameController : MonoBehaviourPunCallbacks
             //プレイヤー１
             if (playerId == 1 && monselect_2 == 0)
             {
+                viewNeko = 3;
+
                 Debug.Log("相手は兵を派遣した");
+
+                //for (int i = 0; i < 3; i++)
+                //{
+                //    //相手にも見えるように
+                //    nekoPrefab[i].GetComponent<SpriteRenderer>().enabled = true;
+                //}
             }
             else if (playerId == 2 && monselect_1 == 0)
             {
+                viewNeko = 3;
+
                 Debug.Log("相手は兵を派遣した");
+
+                //for (int i = 0; i < 3; i++)
+                //{
+                //    //相手にも見えるように
+                //    nekoPrefab[i].GetComponent<SpriteRenderer>().enabled = true;
+                //}
             }
 
             //相手が攻撃してきた場合
@@ -686,7 +868,10 @@ public class GameController : MonoBehaviourPunCallbacks
                 }
                 else
                 {
-                    Debug.Log(mon2[monselect_2 - 1] + "のダメージを受けた！");
+                    Debug.Log(mon2[monselect_2 - 1]*10 + "のダメージを受けた！");
+
+                    Damage(ref hp_1, mon2[monselect_2 - 1]);
+
                 }
             }
 
@@ -699,7 +884,10 @@ public class GameController : MonoBehaviourPunCallbacks
                 }
                 else
                 {
-                    Debug.Log(mon1[monselect_1 - 1] + "のダメージを受けた！");
+                    Debug.Log(mon1[monselect_1 - 1]*10 + "のダメージを受けた！");
+
+                    Damage(ref hp_2, mon1[monselect_1 - 1]);
+
                 }
             }
 
@@ -719,6 +907,21 @@ public class GameController : MonoBehaviourPunCallbacks
         photonView.RPC(nameof(ShowButton), RpcTarget.All);
 
         photonView.RPC(nameof(ButtonTextChange), RpcTarget.All);
+
+        if (playerId == 1)
+        {
+            TextController.GetComponent<TextController>().TextUpdate(hp_1, hp_2);
+
+        }
+
+        else if (playerId == 2)
+        {
+            TextController.GetComponent<TextController>().TextUpdate(hp_2, hp_1);
+
+        }
+
+        turncount++;
+        Debug.Log("ターン：　" + turncount);
 
     }
 
